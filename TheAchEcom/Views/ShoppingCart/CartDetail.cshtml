@@ -1,0 +1,47 @@
+﻿@model CartDetailModel
+@using Repository.DomainModels
+
+<!-- #Cart Detail Section -->
+<div class="cart_detail">
+   <div class="cart_items">
+      @foreach (var cartItem in Model.CartItems)
+      {
+         var product = cartItem.Product;
+         <div class="cart_item flex_center" id="cart_item_@cartItem.Id">
+            <div class="product_detail">
+               <img src="@product.ImageUrl"
+                    style="width:100px;height:100px;background-color:red" />
+               <a href="~/product/productdetail?id=@product.Id" class="product_name">
+                  @product.ProductName
+               </a>
+               <a href="~/shop/shoplist?brandid=@product.BrandId" class="product_brand">
+                     @product.Brand.BrandName
+                  </a>
+
+               <span class="product_price"> Price: @product.UnitPrice </span>
+               <span class="quantity_@cartItem.Id"> quantity: @cartItem.Quantity </span>
+               <span class="total_price"> total price: @(cartItem.Quantity*product.UnitPrice) </span>
+            </div>
+
+            <div class="cart_item_controls">
+               <button onclick="CART_DETAIL_CONTROLS.cart.decrease('@cartItem.Id', @product.Id)"> - </button>
+               <span class="cart_item_quantity"
+                     quantity="@cartItem.Quantity"> @cartItem.Quantity </span>
+                     <button onclick="CART_DETAIL_CONTROLS.cart.increase('@cartItem.Id', @product.Id)"> + </button>
+                     <button onclick="CART_DETAIL_CONTROLS.cart.remove('@cartItem.Id', @product.Id)"> X </button>
+                  </div>
+               </div>
+            }
+   </div>
+
+   <div>
+      <h3> Total Price:  <span id="cart_detail_total">@Model.CartTotalPrice</span> </h3>
+   </div>
+
+</div>
+
+
+@section ViewScripts {
+   <script src="~/js/cart-manager.js"></script>
+   <script src="~/js/cart-detail.js"></script>
+}

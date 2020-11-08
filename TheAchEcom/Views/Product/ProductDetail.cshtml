@@ -1,0 +1,148 @@
+﻿@model TheAchEcom.Controllers.ProductDetailModel
+@using Repository.BusinessModels.ShopList
+@using Repository.DomainModels
+
+@{
+   var repository = new Repository.BusinessModels.EcomRepository();
+   var options = (ShopListOptions)ViewBag.Options;
+}
+
+<!-- #BreadCrumb Section -->
+<div id="">
+   @{
+      // Trace "reverse" categories to build the breadcrumb
+      var categories = new List<Category>();
+      var node = repository.GetCategoryById(Model.Product.CategoryId);
+      while (node != null)
+      {
+         categories.Add(node);
+         node = node.ParentCategory;
+      }
+
+      <div class="breadcrum">
+         @for (int i = categories.Count() - 1; i >= 0; --i)
+         {
+            <a class="breadcrum_item"
+               href="~/Shop/ShopList?CategoryId=@categories[i].Id">
+               @categories[i].CategoryName
+            </a>
+
+            if (i > 0)
+            {
+               <span class="breadcrum_item"> / </span>
+            }
+         }
+      </div>
+   }
+</div>
+
+<!-- #Product Detail Section -->
+@{
+    var product = Model.Product;
+    var brand = Model.Product.Brand; // repository.GetBrandById(Model.Product.BrandId);
+    var isAddedToCart = Model.IsAddedToCart;
+}
+<div class="product_detail flex_center">
+   <!-- #Left: Product Image -->
+   <div class="product_images">
+      <img src="@Model.Product.ImageUrl"
+           style="width:200px;height:200px;" />
+   </div>
+
+   <!-- #Right Product Info -->
+   <div class="details">
+      <h3 class="product_name"> @product.ProductName </h3>
+      <div>
+         <a href="~/Shop/ShopList?BrandId=@brand.Id">
+            Brand - @brand.BrandName
+         </a>
+      </div>
+
+      <span class="product_price"> @product.UnitPrice </span>
+      <div class="product_description"> @product.Description </div>
+
+      <button class="control_item clickable"
+              onclick="OnProductDetailControlClick('cart', this, @product.Id)"
+              added-to-cart="@( isAddedToCart ? "true": "false" )">
+         <span class="text"> @( isAddedToCart ? "Remove From Cart" : "Add To Cart" ) </span>
+      </button>
+   </div>
+</div>
+
+
+<!-- #Reviews Section -->
+@*<div class="product_reviews">
+      <span> Reviews(@Model.Reviews.Count()) </span>
+
+      <div class="reviews">
+         @foreach (var review in Model.Reviews)
+         {
+            <div class="review_item_@review.Id">
+               <div class="customer_info">
+
+               </div>
+               <div class="review_detail">
+                  @if (review.Rating != null)
+                  {
+                     <span class="rating"> @review.Rating  </span>
+                  }
+                  <div class="content"> @review.Comment </div>
+               </div>
+            </div>
+         }
+      </div>
+   </div>*@
+
+<!-- #Related Product Section -->
+<div>
+   <h3> Also of this Brand</h3>
+   <div id="shop_list_section" class="flex_center">
+      @foreach (var item in Model.BrandAlso)
+      {
+         @Html.Partial("_ShopListItem", item)
+      }
+   </div>
+
+</div>
+
+<div>
+   <h3> Also this category </h3>
+   <div id="shop_list_section" class="flex_center">
+      @foreach (var item in Model.CategoryAlso)
+      {
+         @Html.Partial("_ShopListItem", item)
+      }
+   </div>
+</div>
+
+@section ViewScripts {
+   <script src="~/js/shop-list-item.js"></script>
+   <script src="~/js/cart-manager.js"></script>
+   <script>
+
+      const PRODUCT_DETAIL_CONTROLS = {
+         cart: {
+            updateControl: function (item, isAddedToCart) {
+               $(item).attr('added-to-cart', isAddedToCart);
+               var text = (isAddedToCart) ? "Remove From Cart" : "Add To Cart";
+               $(item).find('.text').html(text);
+            },
+            onClick: function (item, productId) {
+               var isAddedToCart = $(item).attr('added-to-cart') == 'true' ? true : false;
+               if (isAddedToCart == true) {
+                  CART_MANAGER.removeFromCart(productId,
+                     () => this.updateControl(item, !isAddedToCart))
+               }
+               else {
+                  CART_MANAGER.addToCart(productId,
+                     () => this.updateControl(item, !isAddedToCart));
+               }
+            }
+         }
+      };
+
+      function OnProductDetailControlClick(name, item, productId) {
+         PRODUCT_DETAIL_CONTROLS[name].onClick(item, productId);
+      }
+   </script>
+}
